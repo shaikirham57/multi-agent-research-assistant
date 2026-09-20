@@ -9,10 +9,21 @@ load_dotenv()
 # --------------------------------------------------
 # Gemini LLM
 # --------------------------------------------------
+#
+# NOTE: this requires crewai>=1.x. The originally pinned crewai==0.83.0
+# builds its tool-calling loop as a legacy text-based ReAct scratchpad,
+# which appends a tool's result onto the model's own turn instead of
+# sending it back as a new "user" turn. Gemini's current API strictly
+# requires conversations to end on a "user" turn, so that old loop fails
+# almost every multi-step call with:
+#   "Requests ending with a model turn are not supported."
+# crewai>=1.x uses Gemini's native tool-calling API instead, which sends
+# a properly structured conversation and avoids this entirely.
 
 gemini_llm = LLM(
-    model="gemini/gemini-3.5-flash-lite",
+    model="gemini/gemini-3.1-flash-lite",
     api_key=os.getenv("GEMINI_API_KEY"),
+    temperature=0.2,
 )
 
 

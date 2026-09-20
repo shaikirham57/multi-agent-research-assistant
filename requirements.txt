@@ -1,4 +1,4 @@
-crewai==0.83.0
+crewai==1.15.22
 python-dotenv==1.2.2
 ddgs
 google-generativeai
