@@ -4,41 +4,47 @@ from pathlib import Path
 
 from crewai import Crew, Process
 
-from agents import (
-    searcher,
-    analyst,
-    fact_checker,
-    writer,
-)
-
-from tasks import (
-    search_task,
-    analysis_task,
-    fact_check_task,
-    writing_task,
-)
+from agents import build_agents
+from tasks import build_tasks
 
 
 # ==================================================
 # Create Research Crew
 # ==================================================
+#
+# A fresh Crew (with its own fresh Agent and Task instances) is built
+# on every call instead of once at import time. Reusing the same Agent
+# objects across multiple runs — e.g. a retry after a failure — can
+# trip crewai's "Executor is already running" guard if a previous run's
+# internal state wasn't fully cleared. Building fresh objects per run
+# avoids that entirely.
 
-crew = Crew(
-    agents=[
-        searcher,
-        analyst,
-        fact_checker,
-        writer,
-    ],
-    tasks=[
-        search_task,
-        analysis_task,
-        fact_check_task,
-        writing_task,
-    ],
-    process=Process.sequential,
-    verbose=True,
-)
+
+def build_crew() -> Crew:
+    """Build a brand-new Crew with fresh agents and tasks."""
+
+    searcher, analyst, fact_checker, writer = build_agents()
+
+    search_task, analysis_task, fact_check_task, writing_task = build_tasks(
+        searcher, analyst, fact_checker, writer
+    )
+
+    return Crew(
+        agents=[
+            searcher,
+            analyst,
+            fact_checker,
+            writer,
+        ],
+        tasks=[
+            search_task,
+            analysis_task,
+            fact_check_task,
+            writing_task,
+        ],
+        process=Process.sequential,
+        verbose=True,
+    )
 
 
 # ==================================================
@@ -135,6 +141,8 @@ if __name__ == "__main__":
     print("=" * 60)
 
     try:
+
+        crew = build_crew()
 
         result = crew.kickoff(
             inputs={

@@ -2,7 +2,7 @@ import time
 
 import streamlit as st
 
-from main import crew, save_report
+from main import build_crew, save_report
 
 st.set_page_config(page_title="Multi-Agent Research Assistant", page_icon="🔎")
 
@@ -34,6 +34,7 @@ if run_clicked:
             f"(attempt {attempt}/{MAX_ATTEMPTS}, this can take a few minutes)"
         )
         try:
+            crew = build_crew()  # fresh agents/tasks every attempt
             result = crew.kickoff(inputs={"topic": topic})
             report = result.raw if hasattr(result, "raw") else str(result)
             report_path = save_report(topic, report)

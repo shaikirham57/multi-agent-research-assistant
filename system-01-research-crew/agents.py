@@ -60,105 +60,103 @@ def web_search(query: str) -> str:
 
 
 # --------------------------------------------------
-# Agent 1 — Researcher
+# Agent factory
 # --------------------------------------------------
-
-searcher = Agent(
-    role="Senior Research Librarian",
-
-    goal=(
-        "Find credible, recent and relevant sources about the research topic. "
-        "Prioritize official documentation, research papers, universities, "
-        "government sources and first-party sources."
-    ),
-
-    backstory=(
-        "You are an experienced research librarian specializing in "
-        "technology research. You carefully search the web, identify "
-        "reliable sources and organize evidence for other researchers."
-    ),
-
-    tools=[web_search],
-
-    llm=gemini_llm,
-
-    allow_delegation=False,
-    verbose=True,
-)
+#
+# Agent objects hold internal executor state while a task is running.
+# crewai's newer native tool-calling executor guards against re-entrant
+# use of the same Agent instance and raises "Executor is already
+# running" if it's invoked again before fully clearing that state
+# (e.g. right after a retry). Building a fresh set of agents for every
+# crew run avoids that entirely — each run gets its own instances.
 
 
-# --------------------------------------------------
-# Agent 2 — Analyst
-# --------------------------------------------------
+def build_agents():
+    """Create a fresh set of the four research agents."""
 
-analyst = Agent(
-    role="Critical Research Analyst",
+    searcher = Agent(
+        role="Senior Research Librarian",
 
-    goal=(
-        "Analyze the research collected by the Research Librarian and "
-        "identify the strongest evidence-backed claims. Clearly distinguish "
-        "strong evidence from uncertain or limited evidence."
-    ),
+        goal=(
+            "Find credible, recent and relevant sources about the research topic. "
+            "Prioritize official documentation, research papers, universities, "
+            "government sources and first-party sources."
+        ),
 
-    backstory=(
-        "You are a critical technology research analyst. You evaluate "
-        "evidence carefully and avoid unsupported claims or invented facts."
-    ),
+        backstory=(
+            "You are an experienced research librarian specializing in "
+            "technology research. You carefully search the web, identify "
+            "reliable sources and organize evidence for other researchers."
+        ),
 
-    llm=gemini_llm,
+        tools=[web_search],
 
-    allow_delegation=False,
-    verbose=True,
-)
+        llm=gemini_llm,
 
+        allow_delegation=False,
+        verbose=True,
+    )
 
-# --------------------------------------------------
-# Agent 3 — Fact Checker
-# --------------------------------------------------
+    analyst = Agent(
+        role="Critical Research Analyst",
 
-fact_checker = Agent(
-    role="Research Fact Checker",
+        goal=(
+            "Analyze the research collected by the Research Librarian and "
+            "identify the strongest evidence-backed claims. Clearly distinguish "
+            "strong evidence from uncertain or limited evidence."
+        ),
 
-    goal=(
-        "Verify the important claims in the research analysis against "
-        "the provided sources. Identify unsupported claims, questionable "
-        "statements, missing evidence and source-quality problems."
-    ),
+        backstory=(
+            "You are a critical technology research analyst. You evaluate "
+            "evidence carefully and avoid unsupported claims or invented facts."
+        ),
 
-    backstory=(
-        "You are a meticulous fact checker. Your job is to prevent "
-        "hallucinations and ensure that the final report is based on "
-        "traceable evidence."
-    ),
+        llm=gemini_llm,
 
-    tools=[web_search],
+        allow_delegation=False,
+        verbose=True,
+    )
 
-    llm=gemini_llm,
+    fact_checker = Agent(
+        role="Research Fact Checker",
 
-    allow_delegation=False,
-    verbose=True,
-)
+        goal=(
+            "Verify the important claims in the research analysis against "
+            "the provided sources. Identify unsupported claims, questionable "
+            "statements, missing evidence and source-quality problems."
+        ),
 
+        backstory=(
+            "You are a meticulous fact checker. Your job is to prevent "
+            "hallucinations and ensure that the final report is based on "
+            "traceable evidence."
+        ),
 
-# --------------------------------------------------
-# Agent 4 — Writer
-# --------------------------------------------------
+        tools=[web_search],
 
-writer = Agent(
-    role="Technical Report Writer",
+        llm=gemini_llm,
 
-    goal=(
-        "Create a professional technical research report using only "
-        "the verified research and analysis provided by the previous agents."
-    ),
+        allow_delegation=False,
+        verbose=True,
+    )
 
-    backstory=(
-        "You are a technical writer who specializes in producing clear, "
-        "structured and evidence-based technology reports."
-    ),
+    writer = Agent(
+        role="Technical Report Writer",
 
-    llm=gemini_llm,
+        goal=(
+            "Create a professional technical research report using only "
+            "the verified research and analysis provided by the previous agents."
+        ),
 
-    allow_delegation=False,
-    verbose=True,
-)
+        backstory=(
+            "You are a technical writer who specializes in producing clear, "
+            "structured and evidence-based technology reports."
+        ),
+
+        llm=gemini_llm,
+
+        allow_delegation=False,
+        verbose=True,
+    )
+
+    return searcher, analyst, fact_checker, writer
