@@ -1,7 +1,7 @@
 crewai==0.83.0
-langgraph==0.2.39
-langchain-openai==0.2.6
 python-dotenv==1.2.2
 ddgs
 google-generativeai
-litellm
+google-genai
+litellm==1.102.0
+streamlit
